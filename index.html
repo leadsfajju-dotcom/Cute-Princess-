@@ -8,8 +8,34 @@
 </head>
 <body>
 
-  <canvas id="canvas"></canvas>
+  <!-- SVG Templates -->
+  <svg style="display: none;">
+    <defs>
+      <!-- Head Template -->
+      <g id="Cabeza">
+        <path d="M 0 -10 L 25 0 L 0 10 L 8 0 Z" fill="#111" />
+        <circle cx="12" cy="-4" r="2" fill="#fff" />
+        <circle cx="12" cy="4" r="2" fill="#fff" />
+      </g>
+
+      <!-- Wings Template -->
+      <g id="Aletas">
+        <path d="M 0 0 C -20 -30, -60 -70, -110 -60 C -70 -20, -30 -10, 0 0 Z" fill="#111" />
+        <path d="M 0 0 C -20 30, -60 70, -110 60 C -70 20, -30 10, 0 0 Z" fill="#111" />
+        <circle cx="0" cy="0" r="3" fill="#111" />
+      </g>
+
+      <!-- Spine Template -->
+      <g id="Espina">
+        <path d="M 0 0 C -10 -25, -35 -45, -60 -40 C -35 -15, -15 -5, 0 0 Z" fill="#111" />
+        <path d="M 0 0 C -10 25, -35 45, -60 40 C -35 15, -15 5, 0 0 Z" fill="#111" />
+        <circle cx="0" cy="0" r="2.5" fill="#111" />
+      </g>
+    </defs>
+  </svg>
+
+  <div id="dragon-container"></div>
 
   <script src="script.js"></script>
 </body>
-</html>
+  </html>
