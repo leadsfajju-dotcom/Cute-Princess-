@@ -1,4 +1,4 @@
-
+const DRESS_COLOR = "#246BFF";
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
