@@ -1,115 +1,110 @@
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const body = document.body;
 
-let width, height;
-
-function resize() {
-  width = canvas.width = window.innerWidth;
-  height = canvas.height = window.innerHeight;
-}
-
-window.addEventListener('resize', resize);
-resize();
-
-const pointer = {
-  x: width / 2,
-  y: height / 2,
-  tx: width / 2,
-  ty: height / 2
-};
-
-window.addEventListener('pointermove', (e) => {
-  pointer.tx = e.clientX;
-  pointer.ty = e.clientY;
-});
-
+// Video ke according parameters
 const N = 40;
-const segments = [];
+const elems = [];
 
 for (let i = 0; i < N; i++) {
-  segments.push({
-    x: width / 2,
-    y: height / 2,
-    angle: 0
-  });
+  elems[i] = { use: null, x: width / 2  window.innerWidth / 2, y: height / 2  window.innerHeight / 2 };
+}
+
+const pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+let frm = Math.random() * 20;
+let rad = 0;
+
+window.addEventListener('pointermove', (e) => {
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+});
+
+// Container and SVG setup
+const svgNS = "http://www.w3.org/2000/svg";
+const svg = document.createElementNS(svgNS, "svg");
+svg.style.position = "fixed";
+svg.style.top = "0";
+svg.style.left = "0";
+svg.style.width = "100vw";
+svg.style.height = "100vh";
+svg.style.pointerEvents = "none";
+svg.style.zIndex = "9999";
+document.body.appendChild(svg);
+
+// Create SVG definitions for Cabeza, Aletas, Espina
+const defs = document.createElementNS(svgNS, "defs");
+
+// 1. Head (Cabeza)
+const gCabeza = document.createElementNS(svgNS, "g");
+gCabeza.setAttribute("id", "Cabeza");
+gCabeza.innerHTML = <path d="M 15 0 L -12 -10 L -6 0 L -12 10 Z" fill="#000" /><circle cx="2" cy="-4" r="2" fill="#fff"/><circle cx="2" cy="4" r="2" fill="#fff"/>;
+defs.appendChild(gCabeza);
+
+// 2. Wings/Fins (Aletas)
+const gAletas = document.createElementNS(svgNS, "g");
+gAletas.setAttribute("id", "Aletas");
+gAletas.innerHTML = 
+  <path d="M 0 0 C -20 -40, -60 -60, -90 -40 C -50 -20, -20 -10, 0 0 Z" fill="none" stroke="#000" stroke-width="1.5" />
+  <path d="M 0 0 C -20 40, -60 60, -90 40 C -50 20, -20 10, 0 0 Z" fill="none" stroke="#000" stroke-width="1.5" />
+  <path d="M 0 0 C -15 -25, -45 -35, -70 -20" fill="none" stroke="#000" stroke-width="1" />
+  <path d="M 0 0 C -15 25, -45 35, -70 20" fill="none" stroke="#000" stroke-width="1" />
+  <line x1="0" y1="0" x2="-25" y2="0" stroke="#000" stroke-width="2"/>
+;
+defs.appendChild(gAletas);
+
+// 3. Spine/Ribs (Espina)
+const gEspina = document.createElementNS(svgNS, "g");
+gEspina.setAttribute("id", "Espina");
+gEspina.innerHTML = 
+  <path d="M 0 0 C -10 -20, -30 -30, -50 -25" fill="none" stroke="#000" stroke-width="1.2" />
+  <path d="M 0 0 C -10 20, -30 30, -50 25" fill="none" stroke="#000" stroke-width="1.2" />
+  <circle cx="0" cy="0" r="2.5" fill="#000" />
+;
+defs.appendChild(gEspina);
+
+svg.appendChild(defs);
+
+// Video code logic loop
+for (let i = 1; i <= N; i++) {
+  const use = document.createElementNS(svgNS, "use");
+  if (i === 1) {
+    use.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#Cabeza");
+  } else if (i >= 8 && i <= 14) {
+    use.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#Aletas");
+  } else {
+    use.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#Espina");
+  }
+  svg.appendChild(use);
+  elems[i - 1].use = use;
 }
 
 function render() {
-  ctx.clearRect(0, 0, width, height);
+  elems[0].x += (pointer.x - elems[0].x) * 0.15;
+  elems[0].y += (pointer.y - elems[0].y) * 0.15;
 
-  // Smooth pointer tracking
-  pointer.x += (pointer.tx - pointer.x) * 0.1;
-  pointer.y += (pointer.ty - pointer.y) * 0.1;
-
-  // Head segment updates
-  segments[0].x = pointer.x;
-  segments[0].y = pointer.y;
-
-  // Follower logic for body segments
   for (let i = 1; i < N; i++) {
-    const prev = segments[i - 1];
-    const curr = segments[i];
-
+    const prev = elems[i - 1];
+    const curr = elems[i];
     const dx = prev.x - curr.x;
     const dy = prev.y - curr.y;
-    curr.angle = Math.atan2(dy, dx);
-
+    const angle = Math.atan2(dy, dx);
     const dist = Math.hypot(dx, dy);
-    const targetDist = 12;
-
-    if (dist > targetDist) {
-      curr.x = prev.x - Math.cos(curr.angle) * targetDist;
-      curr.y = prev.y - Math.sin(curr.angle) * targetDist;
-    }
-  }
-
-  // Draw Wings and Ribs
-  for (let i = N - 1; i >= 0; i--) {
-    const seg = segments[i];
-    const angle = seg.angle;
-
-    ctx.save();
-    ctx.translate(seg.x, seg.y);
-    ctx.rotate(angle);
-
-    // Spine structure
-    ctx.fillStyle = '#1a1a1a';
-    ctx.strokeStyle = '#1a1a1a';
-
-    if (i === 0) {
-      // Dragon Head
-      ctx.beginPath();
-      ctx.moveTo(15, 0);
-      ctx.lineTo(-10, -8);
-      ctx.lineTo(-5, 0);
-      ctx.lineTo(-10, 8);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      // Body Spines & Wings
-      const size = (1 - i / N) * 35;
-      
-      ctx.beginPath();
-      ctx.lineWidth = 1.5;
-      
-      // Left Rib/Wing
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(-size * 0.5, -size * 1.5, -size, -size * 2);
-
-      // Right Rib/Wing
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(-size * 0.5, size * 1.5, -size, size * 2);
-
-      ctx.stroke();
-
-      // Vertebra Center Dot
-      ctx.beginPath();
-      ctx.arc(0, 0, Math.max(1, (1 - i / N) * 4), 0, Math.PI * 2);
-      ctx.fill();
+    
+    if (dist > 12) {
+      curr.x = prev.x - Math.cos(angle) * 12;
+      curr.y = prev.y - Math.sin(angle) * 12;
     }
 
-    ctx.restore();
+    // Scale down towards tail
+    const scale = Math.max(0.1, 1 - (i / N) * 0.85);
+    const wingScale = (i >= 8 && i <= 14) ? (1 - Math.abs(i - 11) * 0.15) : scale;
+
+    curr.use.setAttribute("transform", translate(${curr.x}, ${curr.y}) rotate(${(angle * 180) / Math.PI}) scale(${i >= 8 && i <= 14 ? wingScale : scale}));
   }
+
+  // Head transform
+  const headDx = pointer.x - elems[0].x;
+  const headDy = pointer.y - elems[0].y;
+  const headAngle = Math.atan2(headDy, headDx);
+  elems[0].use.setAttribute("transform", translate(${elems[0].x}, ${elems[0].y}) rotate(${(headAngle * 180) / Math.PI}) scale(1.2));
 
   requestAnimationFrame(render);
 }
